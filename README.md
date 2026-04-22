@@ -1,14 +1,14 @@
-\# EnterpriseQA  - 企业级智能知识库系统
+\#EnterpriseQA  - 企业级智能知识库系统
 
 
 
-> \*\*你好！这是一个基于 Vue3 和 FastAPI 构建的企业级 RAG 知识库系统。\*\*
-
-> 
+> 这是一个基于 Vue3 和 FastAPI 构建的企业级 RAG 知识库系统。
 
 > 
 
-> 这是一个具备\*\*前后端分离、双库状态同步、历史记忆归档\*\*功能的完整系统架构。
+> 
+
+> 这是一个具备前后端分离、双库状态同步、历史记忆归档功能的完整系统架构。
 
 > 
 
@@ -68,7 +68,7 @@
 \---
 
 
-
+```sql
 \##  快速开始
 
 
@@ -88,7 +88,6 @@
 
 在你的 MySQL 中新建一个空数据库：
 
-```sql
 
 CREATE DATABASE db\_enterprise\_qa CHARACTER SET utf8mb4 COLLATE utf8mb4\_unicode\_ci;
 
