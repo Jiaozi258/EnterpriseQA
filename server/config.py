@@ -10,7 +10,7 @@ class Config:
     DB_HOST = "mysql_db"
     DB_PORT = 3306
     DB_USER = "root"
-    DB_PASS = "your pw" 
+    DB_PASS = "123456" 
     DB_NAME = "db_enterprise_qa"
     
     # --- AI 模型配置 ---

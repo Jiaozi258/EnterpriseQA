@@ -9,6 +9,21 @@
         <el-icon><Plus /></el-icon> 新建知识问答
       </el-button>
 
+      <el-dialog v-model="showSettings" title="⚙️ AI 引擎配置" width="400px">
+        <el-form label-position="top">
+          <el-form-item label="Base URL (接口地址)">
+            <el-input v-model="configForm.base_url" placeholder="例如: https://api.siliconflow.cn/v1" />
+          </el-form-item>
+          <el-form-item label="API Key (密钥)">
+            <el-input v-model="configForm.api_key" type="password" placeholder="sk-..." show-password />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="showSettings = false">取消</el-button>
+          <el-button type="primary" :loading="isSaving" @click="saveSettings">保存并生效</el-button>
+        </template>
+      </el-dialog>
+
       <div class="section-title">历史问答记录</div>
       <div class="session-list">
         <div 
@@ -82,7 +97,7 @@
 </template>
 
 <script setup>
-import { UploadFilled, Delete, Plus, ChatDotRound, Close } from '@element-plus/icons-vue'
+import { UploadFilled, Delete, Plus, ChatDotRound, Close, Setting } from '@element-plus/icons-vue'
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -123,11 +138,37 @@ const chatHistory = ref([defaultGreeting])
 const documentList = ref([])
 const isTableLoading = ref(false)
 
+// 🚀 设置相关的状态
+const showSettings = ref(false)
+const isSaving = ref(false)
+const configForm = ref({ api_key: '', base_url: 'https://api.siliconflow.cn/v1' })
+
 // --- 初始化加载 ---
 onMounted(() => {
   fetchDocuments()
   fetchSessions() // 网页打开时拉取历史记录
+  loadSettings()
 })
+
+const loadSettings = async () => {
+  try {
+    const res = await api.get('/api/settings')
+    configForm.value = res.data
+  } catch (e) {}
+}
+
+const saveSettings = async () => {
+  isSaving.value = true
+  try {
+    await api.post('/api/settings', configForm.value)
+    ElMessage.success('AI 引擎切换成功！')
+    showSettings.value = false
+  } catch (error) {
+    ElMessage.error('保存失败：' + (error.response?.data?.detail || error.message))
+  } finally {
+    isSaving.value = false
+  }
+}
 
 // --- 模块 1：会话与记忆逻辑 ---
 // 获取历史会话列表
@@ -188,7 +229,7 @@ const sendMessage = async () => {
   }
 }
 
-// --- 模块 2：文档管理逻辑 (保持不变) ---
+// --- 模块 2：文档管理逻辑  ---
 const fetchDocuments = async () => {
   isTableLoading.value = true
   try {
@@ -205,12 +246,47 @@ const handleUpload = async (options) => {
   const file = options.file
   const formData = new FormData()
   formData.append('file', file)
-  const loading = ElMessage({ message: `正在将 ${file.name} 注入知识库...`, type: 'info', duration: 0 })
+
+  const loading = ElMessage({
+    message: `已接收 ${file.name}， AI 正在解析中...`,
+    type: 'info',
+    duration: 0
+  })
+
   try {
-    await api.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-    loading.close()
-    ElMessage.success('注入成功！')
+    // 1. 秒传接口，拿到任务号
+    const res = await api.post('/api/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    const taskId = res.data.task_id
+    
+    // 刷新左侧列表，你会看到它的状态是灰色的“解析中”
     fetchDocuments() 
+
+    // 2. 开启定时器，每 2 秒向后端查询一次状态
+    const timer = setInterval(async () => {
+      try {
+        const statusRes = await api.get(`/api/upload/status/${taskId}`)
+        const status = statusRes.data.status
+        
+        if (status === 'SUCCESS') {
+          clearInterval(timer) // 停止询问
+          loading.close()
+          ElMessage.success('文档解析完毕，已注入 AI 记忆')
+          fetchDocuments() // 再次刷新，状态变成绿色的“已入库”
+        } else if (status === 'FAILURE') {
+          clearInterval(timer)
+          loading.close()
+          ElMessage.error('文档解析失败，请检查文件格式或后端日志。')
+        }
+        // 如果是 PENDING（排队中）或 STARTED（正在做），就什么都不干，等下个 2 秒继续问
+      } catch (e) {
+        clearInterval(timer)
+        loading.close()
+        ElMessage.error('查询状态时网络断开')
+      }
+    }, 2000)
+
   } catch (error) {
     loading.close()
     ElMessage.error('上传失败：' + (error.response?.data?.detail || error.message))

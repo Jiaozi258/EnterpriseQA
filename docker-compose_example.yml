@@ -1,0 +1,71 @@
+version: '1.0'
+
+services:
+  # 1. 前端服务 (Vue3 + Nginx)
+  frontend:
+    build: ./client
+    ports:
+      - "80:80"   # 可以直接通过 http://localhost 访问网站
+    depends_on:
+      - api       # 保证后端先启动
+
+  # 2. 关系型数据库 (MySQL 8.0)
+  mysql_db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "your pw" 
+      MYSQL_DATABASE: "db_enterprise_qa"   # 启动时自动创建这个空数据库
+    volumes:
+      - mysql_data:/var/lib/mysql          # 防止删容器导致数据丢失
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # 3. 消息队列 (Redis)
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+  # 4. 后端 API 服务 (FastAPI)
+  api:
+    build: ./server
+    ports:
+      - "8000:8000"
+    volumes:                            
+      - shared_uploads:/app/uploads
+      - shared_chroma:/app/chroma_db_v2
+    command: sh -c "uv add langchain langchain-community rank-bm25 langchain-openai && uv run uvicorn main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      - mysql_db
+      - redis
+    environment:
+      # 这里注入 LangSmith 监控体系
+      - LANGCHAIN_TRACING_V2=true
+      - LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+      - LANGCHAIN_API_KEY=your own key
+      - LANGCHAIN_PROJECT=EnterpriseQA_Production
+
+  # 5. 后台解析 (Celery)
+  worker:
+    build: ./server
+    command: sh -c "uv add langchain langchain-community rank-bm25 langchain-openai && uv run celery -A tasks worker --loglevel=info"
+    volumes:                            
+      - shared_uploads:/app/uploads
+      - shared_chroma:/app/chroma_db_v2
+    depends_on:
+      - redis
+      - mysql_db
+    environment:
+      # Worker 里做向量化也需要监控
+      - LANGCHAIN_TRACING_V2=true
+      - LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+      - LANGCHAIN_API_KEY=your own key
+      - LANGCHAIN_PROJECT=EnterpriseQA_Production
+
+# 声明用来持久化保存数据的虚拟硬盘
+volumes:
+  mysql_data:
+  shared_uploads:
+  shared_chroma:
