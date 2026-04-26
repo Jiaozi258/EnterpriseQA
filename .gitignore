@@ -2,6 +2,7 @@
 server/chroma_db_v2/
 server/uploads/
 mysql_data/
+server/config.py
 *.pdf
 *.txt
 *.docx

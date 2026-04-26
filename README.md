@@ -1,5 +1,5 @@
 ```markdown
-# EnterpriseQA - 企业级智能私有知识库
+# EnterpriseQA - 企业级私有知识库
 
 EnterpriseQA 是一个基于 RAG架构的现代化企业级文档问答系统。它允许用户上传内部文档，通过大模型与向量数据库进行深度解析，从而构建一个随时可检索、可交互的智能企业大脑。
 
@@ -34,7 +34,7 @@ EnterpriseQA 是一个基于 RAG架构的现代化企业级文档问答系统。
 
 ### 2. 克隆项目
 ```bash
-git clone [https://github.com/你的用户名/EnterpriseQA.git](https://github.com/你的用户名/EnterpriseQA.git)
+git clone [https://github.com/你的用户名/EnterpriseQA.git](https://github.com/JiaoZi258/EnterpriseQA.git)
 cd EnterpriseQA
 ```
 
