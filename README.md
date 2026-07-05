@@ -1,4 +1,3 @@
-```markdown
 # EnterpriseQA - 企业级私有知识库
 
 EnterpriseQA 是一个基于 RAG架构的现代化企业级文档问答系统。它允许用户上传内部文档，通过大模型与向量数据库进行深度解析，从而构建一个随时可检索、可交互的智能企业大脑。
@@ -7,7 +6,7 @@ EnterpriseQA 是一个基于 RAG架构的现代化企业级文档问答系统。
 
 ## 核心特性
 
--**双擎驱动 (Dual-Engine AI)**：支持通过 `config.py` 热重载无缝切换本地 Ollama 模型或云端大模型。
+- **双擎驱动 (Dual-Engine AI)**：支持通过 `config.py` 热重载无缝切换本地 Ollama 模型或云端大模型。
 - **全异步后台处理 (Async Processing)**：深度集成 **Celery + Redis** 消息队列。海量 PDF 上传与向量化切片在后台静默运行，主 API 毫不阻塞，提供丝滑的前端体验。
 -  **混合检索架构 (Hybrid Search)**：结合 ChromaDB 的高维向量语义检索与基于文档属性的精确过滤，有效降低大模型幻觉，确保回答精准溯源。
 -  **容器化一键部署 (Dockerized)**：全栈环境（前端、FastAPI、MySQL、Redis、Celery Worker）被彻底隔离并编排进 Docker Compose，解决跨域、环境污染等问题。
@@ -34,7 +33,7 @@ EnterpriseQA 是一个基于 RAG架构的现代化企业级文档问答系统。
 
 ### 2. 克隆项目
 ```bash
-git clone [https://github.com/你的用户名/EnterpriseQA.git](https://github.com/JiaoZi258/EnterpriseQA.git)
+git clone https://github.com/JiaoZi258/EnterpriseQA.git
 cd EnterpriseQA
 ```
 
@@ -55,7 +54,7 @@ sudo docker compose up --build -d
 **修改为本地 Ollama 驱动：**
 ```python
 LLM_API_KEY = "ollama"
-OLLAMA_BASE_URL = "[http://host.docker.internal:11434](http://host.docker.internal:11434)"
+OLLAMA_BASE_URL = "http://host.docker.internal:11434"
 LLM_BASE_URL = OLLAMA_BASE_URL + "/v1"
 LLM_MODEL = "qwen2.5:7b"
 EMBEDDING_MODEL = "nomic-embed-text"
@@ -64,7 +63,7 @@ EMBEDDING_MODEL = "nomic-embed-text"
 **修改为云端 API 驱动（以 DeepSeek/硅基流动为例）：**
 ```python
 LLM_API_KEY = "sk-xxxxxxxxxxxxxxxxxxx" # 填入你的真实 Key
-LLM_BASE_URL = "[https://api.siliconflow.cn/v1](https://api.siliconflow.cn/v1)"
+LLM_BASE_URL = "https://api.siliconflow.cn/v1"
 LLM_MODEL = "deepseek-ai/DeepSeek-V3"
 # 对应修改 Embedding 模型
 ```
